@@ -2,24 +2,20 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  lazyRouteComponent,
   redirect,
   type SearchSchemaInput,
 } from '@tanstack/react-router';
 import { get, queryClient } from './api';
-import type { User, Search } from './contracts';
-import {
-  Layout,
-  Home,
-  Detail,
-  Cart,
-  Checkout,
-  Auth,
-  Profile,
-  Wallets,
-  Receipt,
-  NotFound,
-  Favorites,
-} from './screens';
+import type { Search, User } from './contracts';
+import { Detail, Home, Layout, NotFound } from './screens';
+const Cart = lazyRouteComponent(() => import('./purchase'), 'Cart');
+const Checkout = lazyRouteComponent(() => import('./purchase'), 'Checkout');
+const Receipt = lazyRouteComponent(() => import('./purchase'), 'Receipt');
+const Auth = lazyRouteComponent(() => import('./account'), 'Auth');
+const Profile = lazyRouteComponent(() => import('./account'), 'Profile');
+const Wallets = lazyRouteComponent(() => import('./account'), 'Wallets');
+const Favorites = lazyRouteComponent(() => import('./account'), 'Favorites');
 const root = createRootRoute({
   component: Layout,
   notFoundComponent: NotFound,

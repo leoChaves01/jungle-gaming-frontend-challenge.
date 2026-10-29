@@ -8,6 +8,13 @@ export function useRealtime(userId?: string) {
     let active = true;
     let socket: Socket | undefined;
     const versions = new Map<string, number>();
+    const reconcile = (queryKey: readonly unknown[]) => {
+      // An event can arrive while the first REST response is still in flight.
+      // Cancel that snapshot before refetching, including queries without cached data.
+      void queryClient.cancelQueries({ queryKey }).then(() => {
+        if (active) return queryClient.invalidateQueries({ queryKey });
+      });
+    };
     const accept = (type: string, event: MarketEvent) => {
       if (!active || (event.userId && event.userId !== userId)) return;
       const key = type + event.resourceId;
@@ -15,11 +22,10 @@ export function useRealtime(userId?: string) {
       versions.set(key, event.version);
       if (type === 'nft') {
         setNotice('Preço ou disponibilidade atualizado em tempo real. Revise seu carrinho.');
-        for (const key of ['nfts', 'nft', 'cart', 'quote'])
-          void queryClient.invalidateQueries({ queryKey: [key] });
+        for (const key of ['nfts', 'nft', 'cart', 'quote']) reconcile([key]);
       } else {
-        void queryClient.invalidateQueries({ queryKey: ['order', userId, event.resourceId] });
-        void queryClient.invalidateQueries({ queryKey: ['cart'] });
+        reconcile(['order', userId, event.resourceId]);
+        reconcile(['cart']);
       }
     };
     // Engine.IO captures WebSocket at import time: load after MSW starts.
