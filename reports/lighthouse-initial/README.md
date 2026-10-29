@@ -1,0 +1,1 @@
+Diagnóstico inicial anterior às correções. Os arquivos chamados desktop também usaram emulação mobile por uma opção programática ignorada. NÃO usar estes dados como medianas finais. A auditoria corrigida está em ../lighthouse/.

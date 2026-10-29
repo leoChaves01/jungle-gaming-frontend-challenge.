@@ -1,0 +1,6 @@
+node_modules/
+dist/
+test-results/
+test-results-public/
+.env.local
+.vercel/
