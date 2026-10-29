@@ -4,12 +4,27 @@ jobs:
   verify:
     runs-on: windows-latest
     timeout-minutes: 25
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: ${{ runner.temp }}/jungle-source
     steps:
-      - uses: actions/checkout@v4
+      # The repository ends with a dot, which Windows strips from directory names.
+      # Fetch the exact revision into a valid path rather than GITHUB_WORKSPACE.
+      - name: Checkout exact revision into a Windows-compatible path
+        working-directory: ${{ runner.temp }}
+        run: |
+          New-Item -ItemType Directory -Force jungle-source | Out-Null
+          git -C jungle-source init
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git -C jungle-source remote add origin https://github.com/${{ github.repository }}.git
+          git -C jungle-source fetch --depth=1 origin ${{ github.sha }}
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git -C jungle-source checkout --detach FETCH_HEAD
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
       - run: npm ci
       - run: npx playwright install chromium
       - run: npm run typecheck
@@ -21,6 +36,6 @@ jobs:
         with:
           name: playwright-results
           path: |
-            playwright-report/
-            test-results/
+            ${{ runner.temp }}/jungle-source/playwright-report/
+            ${{ runner.temp }}/jungle-source/test-results/
           retention-days: 14
