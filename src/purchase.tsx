@@ -4,10 +4,24 @@ import { ArrowRight, CheckCircle2, ShoppingBag } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { api, get, post, queryClient } from './api';
 import { Button } from './components/ui/button';
-import type { Order, Quote, Wallet } from './contracts';
-import { ErrorBox, Field, Head, Select, Skeleton, Summary, useCart, useSession } from './screens';
+import type { NFT, Order, Quote, Wallet } from './contracts';
+import {
+  Card,
+  ErrorBox,
+  Field,
+  Head,
+  Select,
+  Skeleton,
+  Summary,
+  useCart,
+  useSession,
+} from './screens';
 export function Cart() {
   const cart = useCart();
+  const related = useQuery({
+    queryKey: ['nfts', 'cart-related'],
+    queryFn: ({ signal }) => get<{ items: NFT[] }>('/nfts?page=1', signal),
+  });
   const [coupon, setCoupon] = useState('');
   const update = useMutation({
     mutationFn: (item: { nftId: string; edition: string; quantity: number }) => post('/cart', item),
@@ -18,7 +32,7 @@ export function Cart() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cart'] }),
   });
   return (
-    <>
+    <div className="purchase-page cart-page">
       <Head
         title="Seu carrinho de NFTs"
         subtitle="Sua próxima coleção começa aqui. Revise seus itens antes de continuar."
@@ -36,94 +50,113 @@ export function Cart() {
           </Button>
         </div>
       ) : (
-        <div className="checkout-grid">
-          <div>
-            <div className="cart-list">
-              {cart.data.lines.map((l) => (
-                <article className="cart-row" key={l.nftId + l.edition}>
-                  <img src={l.image} alt={l.name} width="96" height="96" />
-                  <div>
-                    <Link to="/nft/$id" params={{ id: l.nftId }}>
-                      <h3>{l.name}</h3>
-                    </Link>
-                    <p>{l.edition === 'rare' ? 'Edição rara' : 'Original'}</p>
-                    <strong>{l.price} ETH</strong>
-                    {l.quantity > l.stock && (
-                      <p role="alert">Quantidade indisponível. Ajuste ou remova este item.</p>
-                    )}
-                  </div>
-                  <div className="cart-controls">
-                    <Field
-                      label={`Quantidade de ${l.name}`}
-                      type="number"
-                      min="1"
-                      max={l.stock}
-                      value={l.quantity}
-                      disabled={update.isPending}
-                      onChange={(e) =>
-                        update.mutate({
-                          nftId: l.nftId,
-                          edition: l.edition,
-                          quantity: Number(e.target.value),
-                        })
-                      }
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        update.mutate({
-                          nftId: l.nftId,
-                          edition: l.edition,
-                          quantity: 0,
-                        })
-                      }
-                    >
-                      Remover
-                    </Button>
-                  </div>
-                </article>
-              ))}
-            </div>
-            <form
-              className="coupon"
-              onSubmit={(e) => {
-                e.preventDefault();
-                apply.mutate(coupon);
-              }}
-            >
-              <Field
-                label="Cupom de desconto"
-                placeholder="Experimente JUNGLE10"
-                value={coupon}
-                onChange={(e) => setCoupon(e.target.value)}
-              />
-              <Button type="submit" variant="outline" disabled={apply.isPending}>
-                Aplicar cupom
-              </Button>
-              {cart.data.coupon && (
-                <Button variant="ghost" type="button" onClick={() => apply.mutate('')}>
-                  Remover cupom
+        <>
+          <div className="checkout-grid">
+            <div>
+              <div className="cart-list">
+                {cart.data.lines.map((l) => (
+                  <article className="cart-row" key={l.nftId + l.edition}>
+                    <img src={l.image} alt={l.name} width="96" height="96" />
+                    <div>
+                      <Link to="/nft/$id" params={{ id: l.nftId }}>
+                        <h3>{l.name}</h3>
+                      </Link>
+                      <p>{l.edition === 'rare' ? 'Edição rara' : 'Original'}</p>
+                      <strong>{l.price} ETH</strong>
+                      {l.quantity > l.stock && (
+                        <p role="alert">Quantidade indisponível. Ajuste ou remova este item.</p>
+                      )}
+                    </div>
+                    <div className="cart-controls">
+                      <Field
+                        label={`Quantidade de ${l.name}`}
+                        type="number"
+                        min="1"
+                        max={l.stock}
+                        value={l.quantity}
+                        disabled={update.isPending}
+                        onChange={(e) =>
+                          update.mutate({
+                            nftId: l.nftId,
+                            edition: l.edition,
+                            quantity: Number(e.target.value),
+                          })
+                        }
+                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          update.mutate({
+                            nftId: l.nftId,
+                            edition: l.edition,
+                            quantity: 0,
+                          })
+                        }
+                      >
+                        Remover
+                      </Button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <form
+                className="coupon"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  apply.mutate(coupon);
+                }}
+              >
+                <Field
+                  label="Cupom de desconto"
+                  placeholder="Experimente JUNGLE10"
+                  value={coupon}
+                  onChange={(e) => setCoupon(e.target.value)}
+                />
+                <Button type="submit" variant="outline" disabled={apply.isPending}>
+                  Aplicar cupom
                 </Button>
-              )}
-            </form>
-            {apply.error && <ErrorBox error={apply.error} />}
-            <p role="status">{cart.data.coupon && 'Cupom aplicado com sucesso.'}</p>
-            {update.error && <ErrorBox error={update.error} />}
-            <Link to="/" className="text-link">
-              ← Continuar explorando
-            </Link>
-          </div>
-          <Summary quote={cart.data}>
-            <Button asChild disabled={!cart.data.valid}>
-              <Link to="/checkout">
-                Ir para pagamento <ArrowRight size={18} />
+                {cart.data.coupon && (
+                  <Button variant="ghost" type="button" onClick={() => apply.mutate('')}>
+                    Remover cupom
+                  </Button>
+                )}
+              </form>
+              {apply.error && <ErrorBox error={apply.error} />}
+              <p role="status">{cart.data.coupon && 'Cupom aplicado com sucesso.'}</p>
+              {update.error && <ErrorBox error={update.error} />}
+              <Link to="/" className="text-link">
+                ← Continuar explorando
               </Link>
-            </Button>
-          </Summary>
-        </div>
+            </div>
+            <Summary quote={cart.data}>
+              <Button asChild disabled={!cart.data.valid}>
+                <Link to="/checkout">
+                  Ir para pagamento <ArrowRight size={18} />
+                </Link>
+              </Button>
+            </Summary>
+          </div>
+          <section className="related-collection cart-related" aria-labelledby="cart-related-title">
+            <h2 id="cart-related-title">Colecionadores também viram</h2>
+            {related.isPending ? (
+              <Skeleton cards />
+            ) : related.error ? (
+              <ErrorBox error={related.error} retry={() => void related.refetch()} />
+            ) : (
+              <div className="cards">
+                {related.data.items
+                  .filter((item) => !cart.data.lines.some((line) => line.nftId === item.id))
+                  .slice(0, 5)
+                  .map((item) => (
+                    <Card key={item.id} nft={item} />
+                  ))}
+              </div>
+            )}
+          </section>
+        </>
       )}
-    </>
+    </div>
   );
 }
 type Attempt = {
@@ -257,7 +290,7 @@ export function Checkout() {
       </>
     );
   return (
-    <>
+    <div className="purchase-page checkout-page">
       <Head title="Pagamento" subtitle="Só mais um passo para sua nova coleção." />
       <div className="steps">
         <span>01 Carrinho</span>
@@ -403,7 +436,7 @@ export function Checkout() {
           <Link to="/cart">Voltar ao carrinho</Link>
         </Summary>
       </div>
-    </>
+    </div>
   );
 }
 export function Receipt() {
