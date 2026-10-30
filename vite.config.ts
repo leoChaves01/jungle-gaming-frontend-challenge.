@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Connect } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import compression from 'compression';
@@ -11,7 +11,8 @@ export default defineConfig({
       configurePreviewServer(server) {
         // Serve the same complete assets with standard HTTP compression for
         // every preview client, matching a production static host.
-        server.middlewares.use(compression());
+        // The package supports Node HTTP; its DefinitelyTyped signature is Express-only.
+        server.middlewares.use(compression() as unknown as Connect.NextHandleFunction);
       },
     },
     {
@@ -39,3 +40,4 @@ export default defineConfig({
   server: { host: '127.0.0.1' },
   preview: { host: '127.0.0.1' },
 });
+
