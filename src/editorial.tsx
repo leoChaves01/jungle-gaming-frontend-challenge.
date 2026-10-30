@@ -98,7 +98,7 @@ export function Editorial() {
     </>
   );
 }
-export function ReferenceFooter({ children }: { children: React.ReactNode }) {
+export function ReferenceFooter({ children }: { children?: React.ReactNode }) {
   const [notice, setNotice] = useState('');
   const auxiliary = (label: string) => (
     <button onClick={() => setNotice(`${label}: recurso fora do escopo desta demonstração.`)}>
@@ -216,8 +216,7 @@ export function ReferenceFooter({ children }: { children: React.ReactNode }) {
         </p>
       )}
       <p className="copyright">
-        © 2026 Kurio. Propriedade digital para todos.{' '}
-        <span>Demonstração sem pagamentos reais.</span>
+        © 2026 Kurio. Propriedade digital para todos.
       </p>
       {children}
     </footer>

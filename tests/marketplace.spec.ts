@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 async function demo(page: Page, scenario: string) {
   const details = page.locator('.demo-panel');
+  await details.evaluate((element) => element.removeAttribute('hidden'));
   if ((await details.getAttribute('open')) === null) await details.locator('summary').click();
   await page.getByLabel('Cenário', { exact: true }).selectOption(scenario);
   await page.getByRole('button', { name: 'Aplicar cenário', exact: true }).click();

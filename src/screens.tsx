@@ -258,9 +258,8 @@ export function Layout() {
       <main id="main" tabIndex={-1} className={path === '/' ? 'home-page' : ''}>
         <Outlet />
       </main>
-      <ReferenceFooter>
-        <DemoPanel />
-      </ReferenceFooter>
+      <ReferenceFooter />
+      <DemoPanel />
       <nav className="bottom-nav" aria-label="Navegação mobile">
         <Link to="/" aria-label="Início">
           <House />
@@ -295,7 +294,7 @@ function DemoPanel() {
     },
   });
   return (
-    <details className="demo-panel">
+    <details className="demo-panel" hidden>
       <summary>Laboratório de demonstração</summary>
       <p>Controles reproduzíveis dos mocks. Alterações de NFT são enviadas por Socket.IO.</p>
       <Select label="Cenário" value={scenario} onChange={(e) => setScenario(e.target.value)}>
