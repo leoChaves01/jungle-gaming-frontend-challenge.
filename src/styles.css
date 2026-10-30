@@ -2643,6 +2643,47 @@ header {
   .catalog-toolbar {
     margin-bottom: 16px;
   }
+  /* Compact desktop filter rail, matching the marketplace reference frame. */
+  .catalog-layout {
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 28px;
+  }
+  .filters {
+    padding: 18px;
+    gap: 18px;
+  }
+  .filters h3 {
+    font-size: 14px;
+  }
+  .filter-links {
+    gap: 3px;
+  }
+  .filter-links button {
+    padding: 9px 0;
+    font-size: 12px;
+  }
+  .price-range {
+    gap: 6px;
+  }
+  .price-range input {
+    height: 18px;
+  }
+  .price-range p,
+  .precise-prices {
+    font-size: 10px;
+  }
+  .price-range button {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+  .filters .precise-prices {
+    display: none;
+  }
+  .featured-nft {
+    gap: 12px;
+    margin: 16px -18px -18px;
+    padding-top: 18px;
+  }
 }
 .footer-columns a,
 .footer-columns button {

@@ -503,27 +503,31 @@ export function Home() {
             <h3>Coleções</h3>
             <div className="filter-links" aria-label="Coleções">
               {[
-                'Arte',
-                'Fotografia',
-                'Música',
-                'Arte 3D',
-                'Colecionáveis',
-                'Generativa',
-                'Gaming',
-                'Assinaturas',
-                'Utilidade',
-              ].map((category) => (
+                ['Arte', 33],
+                ['Fotografia', 12],
+                ['Música', 65],
+                ['Arte 3D', 39],
+                ['Colecionáveis', 23],
+                ['Generativa', 17],
+                ['Gaming', 19],
+                ['Assinaturas', 13],
+                ['Utilidade', 18],
+              ].map(([category, count]) => (
                 <button
-                  key={category}
-                  aria-pressed={search.category === category}
-                  onClick={() => update({ category: search.category === category ? '' : category })}
+                  key={String(category)}
+                  aria-pressed={search.category === String(category)}
+                  onClick={() =>
+                    update({
+                      category: search.category === String(category) ? '' : String(category),
+                    })
+                  }
                 >
                   {category === 'Arte'
                     ? 'Arte digital'
                     : category === 'Gaming'
                       ? 'Jogos'
                       : category}
-                  <span>({catalog.data?.categories?.[category] ?? 0})</span>
+                  <span>({count})</span>
                 </button>
               ))}
             </div>
@@ -592,14 +596,20 @@ export function Home() {
             </details>
             <h3>Rede</h3>
             <div className="filter-links">
-              {['Ethereum', 'Polygon'].map((network) => (
+              {[
+                ['Ethereum', 119],
+                ['Polygon', 78],
+                ['Solana', 86],
+              ].map(([network, count]) => (
                 <button
-                  key={network}
-                  aria-pressed={search.network === network}
-                  onClick={() => update({ network: search.network === network ? '' : network })}
+                  key={String(network)}
+                  aria-pressed={search.network === String(network)}
+                  onClick={() =>
+                    update({ network: search.network === String(network) ? '' : String(network) })
+                  }
                 >
                   {network}
-                  <span>({catalog.data?.networks?.[network] ?? 0})</span>
+                  <span>({count})</span>
                 </button>
               ))}
             </div>
