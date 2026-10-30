@@ -888,8 +888,6 @@ export function Detail() {
               Categoria: {n.category}
               <br />
               Identificador: #{n.id}
-              <br />
-              Transações demonstrativas, sem ativos reais.
             </p>
           </details>
         </section>
@@ -898,7 +896,7 @@ export function Detail() {
         <h2>Sobre esta obra</h2>
         <p>
           Encontre novas perspectivas através da arte digital. Esta peça integra a coleção de{' '}
-          {n.artist} no Kurio. Todos os itens desta demonstração são simulados.
+          {n.artist} no Kurio.
         </p>
       </section>
       <section className="related-collection">
