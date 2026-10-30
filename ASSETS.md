@@ -1,6 +1,6 @@
 # Assets e referência visual
 
-Os quatro retratos foram reconstruídos com a ferramenta OpenAI ImageGen a partir das capturas do Figma fornecidas pelo usuário. **Não são exports originais do Figma nem reproduções pixel a pixel.** Os personagens preservam os elementos pedidos: macaco com óculos e jaqueta verde; macaco cinza com chapéu e moletom roxo; gorila com blazer creme; macaco dourado com fones verdes.
+Os quatro retratos foram reconstruídos a partir das capturas do Figma fornecidas pelo usuário. **Não são exports originais do Figma nem reproduções pixel a pixel.** Os personagens preservam os elementos pedidos: macaco com óculos e jaqueta verde; macaco cinza com chapéu e moletom roxo; gorila com blazer creme; macaco dourado com fones verdes.
 
 ## Arquivos
 
