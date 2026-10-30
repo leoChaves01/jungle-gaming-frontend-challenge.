@@ -202,7 +202,7 @@ export function ReferenceFooter({ children }: { children: React.ReactNode }) {
                   setNotice(`${label}: a Kurio demonstrativa não possui perfil oficial.`)
                 }
               >
-                {['f', '◎', '𝕏', 'in', '▶'][i]}
+                <span aria-hidden="true">{['f', '◎', '𝕏', 'in', '▶'][i]}</span>
               </button>
             ))}
           </div>

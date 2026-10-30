@@ -100,3 +100,11 @@ O CI usa Windows para manter as mesmas baselines. Como o nome do repositório te
 Os prints enviados em 29/10 orientam o cabeçalho, grade de nove itens, personagens, preços iniciais, banners, Diário da Cunhagem, rodapé e login em diálogo. Avatares de comentários e seleções azuis do Figma não fazem parte da interface. Newsletter, redes sociais, recuperação por e-mail e OAuth exibem avisos de indisponibilidade, sem simular envio ou autenticação bem-sucedida. O catálogo possui 36 NFTs; contagens dos filtros vêm da API e representam a simulação, não números decorativos do frame.
 
 As novas fixtures usam `greenmint.mock.v3`; dados da demonstração anterior em v2 não são apagados, mas não são carregados nesta versão. Use apenas dados fictícios.
+
+No PowerShell, a validação pública pode ser reproduzida assim:
+
+```powershell
+$env:TEST_BASE_URL = 'https://jungle-gaming-frontend-challenge-iota.vercel.app'
+npm test
+Remove-Item Env:TEST_BASE_URL
+```

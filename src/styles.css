@@ -2454,3 +2454,12 @@ header {
     margin-bottom: 16px;
   }
 }
+.footer-columns a,
+.footer-columns button {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+}
+.social-links button {
+  justify-content: center;
+}

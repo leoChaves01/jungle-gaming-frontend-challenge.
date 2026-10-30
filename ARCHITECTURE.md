@@ -29,7 +29,7 @@ Base `/api`, JSON UTF-8. Valores ETH são **strings decimais**; quantidades são
 | POST `/login`        | email, password                                                   | User; 401 inválido                        |
 | GET `/session`       | —                                                                 | User ou null                              |
 | POST `/logout`       | {}                                                                | ok                                        |
-| GET `/nfts`          | q, category, network, min, max, sort=recent/low/high, page        | items: NFT[], total; 8 por página         |
+| GET `/nfts`          | q, category, network, min, max, sort=recent/new/popular/low/high, page        | items: NFT[], total, categories, networks; 9 por página         |
 | GET `/nfts/:id`      | —                                                                 | NFT, com edições, estoque, preço e versão |
 | GET `/favorites`     | —                                                                 | string[] de IDs do usuário                |
 | POST `/favorites`    | id, active:boolean                                                | favoritos atualizados                     |
@@ -76,7 +76,7 @@ MSW remove o prefixo `/socket.io/` ao fazer matching, por isso o handler usa `ws
 | nft.updated   | id estável do evento, resourceId, version | Invalida catálogo, detalhe, carrinho/cotação e anuncia mudança |
 | order.updated | id, resourceId, version, userId           | Reconcilia pedido e carrinho do usuário                        |
 
-Versões menores/iguais são descartadas por recurso. Eventos privados de outra sessão são ignorados. Cleanup remove listeners e fecha socket. Em connect/reconnect, consultas ativas são invalidadas e reconsultadas por REST. Eventos cancelam consultas correspondentes que ainda estão em andamento antes de invalidar e buscar novamente. Isso inclui a primeira consulta sem dados em cache: apenas invalidá-la permite que uma resposta antiga, já em transporte, se torne o resultado final. REST permanece fonte autoritativa. Pedido pendente também faz polling REST a cada 1,5 s como recuperação complementar.
+Versões menores/iguais são descartadas por recurso. Eventos privados de outra sessão são ignorados. Cleanup remove listeners e fecha socket. Após reconnect, consultas ativas são invalidadas e reconsultadas por REST. Eventos cancelam consultas correspondentes que ainda estão em andamento antes de invalidar e buscar novamente. Isso inclui a primeira consulta sem dados em cache: apenas invalidá-la permite que uma resposta antiga, já em transporte, se torne o resultado final. REST permanece fonte autoritativa. Pedido pendente também faz polling REST a cada 1,5 s como recuperação complementar.
 
 ## Cache, falhas e UX
 
@@ -98,7 +98,7 @@ Skeletons possuem shimmer e respeitam prefers-reduced-motion. Imagens e fontes s
 
 O build antecipa o download do chunk de mocks com modulepreload, junto da imagem de destaque e da fonte local. A montagem da aplicação aguarda a ativação do MSW; o Socket.IO é importado depois dessa ativação. O skeleton do detalhe reserva espaço para galeria e informações. Texto, contraste, foco e zoom são verificados nos perfis mobile e desktop. Tailwind analisa somente src, evitando que relatórios de auditoria alterem o CSS gerado. Essas otimizações integram o build normal e não dependem de detecção de Lighthouse.
 
-A separação das rotas e do menu reduziu o chunk inicial de 505,45 para 458,19 kB antes de gzip. O build deixou de emitir o aviso de chunk acima de 500 kB; a meta Lighthouse mobile é avaliada separadamente nos relatórios.
+A separação das rotas e do menu reduziu o chunk inicial de 505,45 para 458,31 kB antes de gzip. O build deixou de emitir o aviso de chunk acima de 500 kB; a meta Lighthouse mobile é avaliada separadamente nos relatórios.
 
 O drawer mobile usa import dinâmico em src/menu-drawer.tsx. A biblioteca de diálogo é baixada quando o menu é aberto; Radix continua controlando o foco, Escape e fechamento, com retorno explícito ao botão acionador.
 
@@ -109,3 +109,8 @@ Foi observado um TypeError no cabeçalho ao reduzir `cart.lines` inexistente. A 
 O login/cadastro usa Radix Dialog com fundo de catálogo inerte, foco contido e Escape. Busca/coleções/editorial permanecem componentes reais da aplicação. Ações fora do escopo mostram indisponibilidade explícita. “Em alta” ordena por versão do NFT e id (critério determinístico da simulação); “Novos lançamentos” ordena id decrescente. Ambos compõem o estado da URL.
 
 O preview aplica compressão HTTP negociada (gzip/Brotli) a todos os clientes por middleware `compression`, sem modificar o conteúdo dos assets. Isso torna o servidor local de auditoria mais próximo da hospedagem estática de produção. A versão anterior do preview entregava JavaScript sem `Content-Encoding`; as auditorias anteriores são preservadas como diagnóstico. O middleware não participa do bundle do navegador nem remove funcionalidades.
+
+
+O catálogo prioriza o carregamento das três primeiras imagens, que já aparecem na primeira tela mobile. A consulta REST inicial fornece o primeiro snapshot; a invalidação geral do socket ocorre nas reconexões, evitando uma segunda consulta na primeira conexão. Eventos continuam cancelando consultas em andamento e reconciliando os recursos afetados. Os links do rodapé possuem alvo mínimo de 24 px, e ícones decorativos ficam fora do nome acessível.
+
+

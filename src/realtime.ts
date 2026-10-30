@@ -7,6 +7,7 @@ export function useRealtime(userId?: string) {
   useEffect(() => {
     let active = true;
     let socket: Socket | undefined;
+    let connectedOnce = false;
     const versions = new Map<string, number>();
     const reconcile = (queryKey: readonly unknown[]) => {
       // An event can arrive while the first REST response is still in flight.
@@ -36,7 +37,8 @@ export function useRealtime(userId?: string) {
         reconnectionDelay: 500,
       });
       socket.on('connect', () => {
-        if (active) void queryClient.invalidateQueries();
+        if (active && connectedOnce) void queryClient.invalidateQueries();
+        connectedOnce = true;
       });
       socket.on('nft.updated', (e) => accept('nft', e));
       socket.on('order.updated', (e) => accept('order', e));

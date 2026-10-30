@@ -212,7 +212,9 @@ export function Layout() {
             className="cart-link"
           >
             <ShoppingBag size={20} />
-            <span>{cart.data?.lines?.reduce((n, l) => n + l.quantity, 0) || 0}</span>
+            <span aria-hidden="true">
+              {cart.data?.lines?.reduce((n, l) => n + l.quantity, 0) || 0}
+            </span>
           </Link>
           {user ? (
             <Button variant="outline" size="sm" onClick={() => logout.mutate()}>
@@ -327,7 +329,7 @@ function DemoPanel() {
     </details>
   );
 }
-export function Card({ nft }: { nft: NFT }) {
+export function Card({ nft, priority = false }: { nft: NFT; priority?: boolean }) {
   return (
     <article className="nft-card">
       <Link to="/nft/$id" params={{ id: nft.id }}>
@@ -339,7 +341,7 @@ export function Card({ nft }: { nft: NFT }) {
             width="400"
             height="400"
             alt={`${nft.name}, arte de ${nft.artist}`}
-            loading="lazy"
+            loading={priority ? 'eager' : 'lazy'}
           />
           {nft.id === '3' && <span className="art-tag">RARO</span>}
         </div>
@@ -655,8 +657,8 @@ export function Home() {
               <ErrorBox error={catalog.error} retry={() => void catalog.refetch()} />
             ) : catalog.data.items.length ? (
               <div className="cards">
-                {catalog.data.items.map((n) => (
-                  <Card nft={n} key={n.id} />
+                {catalog.data.items.map((n, index) => (
+                  <Card nft={n} key={n.id} priority={index < 3} />
                 ))}
               </div>
             ) : (
