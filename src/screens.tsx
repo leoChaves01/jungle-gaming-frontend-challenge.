@@ -378,7 +378,13 @@ export function Home() {
   };
   const navigate = useNavigate();
   const [text, setText] = useState(search.q);
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  // On a direct URL or reload, selected filters must remain operable on mobile.
+  // Keeping this panel open also avoids hiding the active state while catalog data reloads.
+  const [filtersOpen, setFiltersOpen] = useState(
+    () => Boolean(search.category || search.network || search.min || search.max),
+  );
+  const filtersHaveSelection = Boolean(search.category || search.network || search.min || search.max);
+  const filtersVisible = filtersOpen || filtersHaveSelection;
   const [range, setRange] = useState({ min: search.min || '0', max: search.max || '12.3' });
   useEffect(
     () => setRange({ min: search.min || '0', max: search.max || '12.3' }),
@@ -427,9 +433,9 @@ export function Home() {
           type="button"
           className="filter-toggle"
           aria-label="Filtros"
-          aria-expanded={filtersOpen}
+          aria-expanded={filtersVisible}
           aria-controls="catalog-filters"
-          onClick={() => setFiltersOpen(!filtersOpen)}
+          onClick={() => setFiltersOpen(!filtersVisible)}
         >
           <SlidersHorizontal />
         </Button>
@@ -494,7 +500,7 @@ export function Home() {
           <span className="muted">Arte que conecta.</span>
         </div>
         <div className="catalog-layout">
-          <aside id="catalog-filters" className={`filters ${filtersOpen ? 'filters-open' : ''}`}>
+          <aside id="catalog-filters" className={`filters ${filtersVisible ? 'filters-open' : ''}`}>
             <h3>Coleções</h3>
             <div className="filter-links" aria-label="Coleções">
               {[
