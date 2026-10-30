@@ -4,6 +4,10 @@ Relatório gerado a partir dos resultados executados, em 2026-10-30T10:35:09.252
 
 ## Atualização final — 30 de outubro
 
+- A regressão do commit `65bfb06` foi corrigida: o painel de avaliação não usa mais `hidden`. Ele é aberto por `?demo=1`, começa recolhido e permanece ausente das URLs normais.
+- Os testes de estoque, compra e Socket.IO navegam para esse modo e acionam controles reais; não alteram atributos do DOM para revelar o painel. A suíte visual passou sem atualização de baselines.
+- Validação desta correção: `npm run typecheck`, `npm run lint` e `npm run build` aprovados; `npm test` executado até o fim com **48 aprovados, 0 falhas**, em 3,0 min.
+
 - O filtro mobile agora mantém o painel aberto quando a URL contém filtros ativos. Isso corrige o reload de `Arte digital`/`Ethereum`, sem remover a verificação automatizada.
 - O caso foi executado três vezes localmente e três vezes na URL HTTPS publicada, sem falhas.
 - A suíte local completa foi executada novamente: **48 aprovados, 0 falhas**.

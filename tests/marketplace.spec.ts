@@ -1,7 +1,16 @@
 import { test, expect, type Page } from '@playwright/test';
-async function demo(page: Page, scenario: string) {
+async function evaluationPanel(page: Page) {
+  const url = new URL(page.url());
+  if (url.searchParams.get('demo') !== '1') {
+    url.searchParams.set('demo', '1');
+    await page.goto(url.pathname + url.search + url.hash);
+  }
   const details = page.locator('.demo-panel');
-  await details.evaluate((element) => element.removeAttribute('hidden'));
+  await expect(details).toBeVisible();
+  return details;
+}
+async function demo(page: Page, scenario: string) {
+  const details = await evaluationPanel(page);
   if ((await details.getAttribute('open')) === null) await details.locator('summary').click();
   await page.getByLabel('Cenário', { exact: true }).selectOption(scenario);
   await page.getByRole('button', { name: 'Aplicar cenário', exact: true }).click();
@@ -23,7 +32,7 @@ async function add(page: Page, id = '1') {
 async function checkout(page: Page) {
   await login(page);
   await add(page);
-  await page.goto('/checkout');
+  await page.goto('/checkout?demo=1');
   await page.getByRole('button', { name: 'Conectar carteira', exact: true }).click();
   await page.getByRole('button', { name: 'Revisar pedido' }).click();
   await expect(page.getByRole('heading', { name: 'Revise seu pedido' })).toBeVisible();
@@ -141,7 +150,7 @@ test('06 compra completa e recibo imutável', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Pedido confirmado!' })).toBeVisible();
   const url = page.url();
   await expect(page.getByTestId('total')).toHaveText('1.191 ETH');
-  await page.locator('.demo-panel summary').click();
+  await (await evaluationPanel(page)).locator('summary').click();
   await page.getByRole('button', { name: 'Alterar preço NFT 1' }).click();
   await expect(page.getByTestId('total')).toHaveText('1.191 ETH');
   await page.reload();
@@ -203,7 +212,7 @@ test('10 Socket.IO: preço novo exige confirmação nova e eventos antigos não 
   page,
 }) => {
   await checkout(page);
-  await page.locator('.demo-panel summary').click();
+  await (await evaluationPanel(page)).locator('summary').click();
   await page.getByRole('button', { name: 'Duplicar evento' }).click();
   await expect(
     page.getByRole('status').filter({ hasText: 'atualizado em tempo real' }),
@@ -221,6 +230,8 @@ test('11 pedido pendente recupera após interrupção e refresh', async ({ page 
   await demo(page, 'pending');
   await page.getByRole('button', { name: 'Confirmar compra simulada' }).click();
   await expect(page.getByRole('heading', { name: 'Pedido pendente' })).toBeVisible();
+  const panel = await evaluationPanel(page);
+  await panel.locator('summary').click();
   await page.getByRole('button', { name: 'Interromper conexão' }).click();
   await page.reload();
   await expect(page).toHaveURL(/order\/GM-1/);

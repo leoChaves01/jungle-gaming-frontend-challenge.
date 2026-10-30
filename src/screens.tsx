@@ -145,6 +145,8 @@ export function Layout() {
   const menuTrigger = useRef<HTMLButtonElement>(null);
   const notice = useRealtime(user?.id);
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const searchString = useRouterState({ select: (s) => s.location.searchStr });
+  const showEvaluationPanel = new URLSearchParams(searchString).get('demo') === '1';
   useEffect(() => {
     if (user === null && /^\/(checkout|profile|wallets|favorites|order)(\/|$)/.test(path)) {
       void navigate({ to: '/login', search: { returnTo: location.pathname + location.search } });
@@ -259,7 +261,7 @@ export function Layout() {
         <Outlet />
       </main>
       <ReferenceFooter />
-      <DemoPanel />
+      {showEvaluationPanel && <DemoPanel />}
       <nav className="bottom-nav" aria-label="Navegação mobile">
         <Link to="/" aria-label="Início">
           <House />
@@ -294,7 +296,7 @@ function DemoPanel() {
     },
   });
   return (
-    <details className="demo-panel" hidden>
+    <details className="demo-panel">
       <summary>Laboratório de demonstração</summary>
       <p>Controles reproduzíveis dos mocks. Alterações de NFT são enviadas por Socket.IO.</p>
       <Select label="Cenário" value={scenario} onChange={(e) => setScenario(e.target.value)}>

@@ -45,7 +45,7 @@ As duas contas iniciam com uma carteira Ethereum. Um novo cadastro começa sem c
 
 ## Cenários e reset
 
-Abra **Laboratório de demonstração** no rodapé de qualquer tela. Selecione o cenário e clique **Aplicar cenário**. O cenário permanece após refresh até ser alterado ou resetado.
+Para avaliação, acrescente `?demo=1` à rota, por exemplo `/?demo=1` ou `/checkout?demo=1`. O **Laboratório de demonstração** aparece recolhido no rodapé; abra-o, selecione o cenário e clique **Aplicar cenário**. Ele não é renderizado nas URLs normais, preservando a vitrine. O cenário permanece após refresh até ser alterado ou resetado.
 
 | Cenário          | Como observar                                                                                                       |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------- |

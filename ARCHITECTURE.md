@@ -88,9 +88,9 @@ Skeletons possuem shimmer e respeitam prefers-reduced-motion. Imagens e fontes s
 
 - Figma: direção visual inspecionada, mas fidelidade pixel a pixel e exportação dos assets originais pendentes. Quatro retratos reconstruídos com ImageGen substituem os assets originais (ver ASSETS.md). Tipografia local Roboto Mono aproxima o frame. Estados extras são projetados para legibilidade e teclado.
 - Persistência é por origem/navegador. Não há sincronização transacional multiaba ou entre dispositivos; fechar a aba interrompe timers, e a consulta seguinte reconcilia pelo relógio persistido.
-- Laboratório é intencionalmente público no build demo; não é endpoint administrativo seguro.
+- O laboratório de avaliação é ativado explicitamente por `?demo=1`, aparece recolhido e usa os mesmos handlers/mocks da aplicação. URLs normais não o renderizam; não é endpoint administrativo seguro.
 - Endereços de carteira recebem validação sintática, não verificação on-chain.
-- Categoria e rede são filtros combináveis entre si, com uma seleção por dimensão. A faixa de preço oferece dois controles deslizantes com aplicação explícita e campos numéricos em “Valores exatos”; não há multi-seleção de categorias.
+- Categoria e rede são filtros combináveis entre si, com uma seleção por dimensão. A faixa de preço oferece dois controles deslizantes com aplicação explícita; não há multi-seleção de categorias.
 - O projeto privilegia fluxo completo, contratos e evidência executável. Conta e compra foram separadas em chunks sob demanda. Componentes compartilhados ainda podem ser extraídos de `screens.tsx` para melhorar a manutenção.
 - O destino autorizado é leoChaves01/jungle-gaming-frontend-challenge. (com ponto final); evidências da publicação constam em VALIDATION.md.
 

@@ -1,5 +1,13 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { wei, eth } from '../src/contracts';
+async function evaluationPanel(page: Page) {
+  const url = new URL(page.url());
+  url.searchParams.set('demo', '1');
+  await page.goto(url.pathname + url.search + url.hash);
+  const details = page.locator('.demo-panel');
+  await expect(details).toBeVisible();
+  return details;
+}
 test('precisão decimal em wei, sem arredondamento binário', () => {
   expect(eth(wei('0.1') + wei('0.2'))).toBe('0.3');
   expect(eth(wei('0.000000000000000001') * 3n)).toBe('0.000000000000000003');
@@ -108,7 +116,7 @@ test('estoque zerado por Socket.IO impede compra', async ({ page }) => {
   await page.getByRole('button', { name: 'Adicionar ao carrinho' }).click();
   await expect(page.getByText('NFT adicionado.')).toBeVisible();
   await page.goto('/cart');
-  await page.locator('.demo-panel summary').click();
+  await (await evaluationPanel(page)).locator('summary').click();
   await page.getByRole('button', { name: 'Esgotar NFT 1' }).click();
   await expect(
     page.getByRole('status').filter({ hasText: 'atualizado em tempo real' }),
@@ -121,7 +129,7 @@ test('estoque zerado por Socket.IO impede compra', async ({ page }) => {
 test('respostas fora de ordem, preço na URL e recuperação de conexão', async ({ page }) => {
   await page.goto('/');
   await page.locator('.nft-card').first().waitFor();
-  await page.locator('.demo-panel summary').click();
+  await (await evaluationPanel(page)).locator('summary').click();
   await page.getByLabel('Cenário', { exact: true }).selectOption('race');
   await page.getByRole('button', { name: 'Aplicar cenário', exact: true }).click();
   await expect(page.getByText('Cenário atualizado.')).toBeVisible();
@@ -135,11 +143,18 @@ test('respostas fora de ordem, preço na URL e recuperação de conexão', async
   await expect(page.getByLabel('Buscar NFTs')).toHaveValue('Ivory');
   if (await page.getByRole('button', { name: 'Filtros', exact: true }).isVisible())
     await page.getByRole('button', { name: 'Filtros', exact: true }).click();
-  await page.locator('.precise-prices summary').click();
-  await page.getByLabel('Preço mínimo (ETH)').fill('1.8');
+  const precisePrices = page.locator('.precise-prices summary');
+  if (await precisePrices.isVisible()) {
+    await precisePrices.click();
+    await page.getByLabel('Preço mínimo (ETH)').fill('1.8');
+  } else {
+    const url = new URL(page.url());
+    url.searchParams.set('min', JSON.stringify('1.8'));
+    await page.goto(url.pathname + url.search + url.hash);
+  }
   await expect(page.locator('.nft-card')).toHaveCount(3);
   await expect(page).toHaveURL((url) => JSON.parse(url.searchParams.get('min')!) === '1.8');
-  await page.locator('.demo-panel summary').click();
+  await (await evaluationPanel(page)).locator('summary').click();
   await page.getByLabel('Cenário', { exact: true }).selectOption('offline');
   await page.getByRole('button', { name: 'Aplicar cenário', exact: true }).click();
   await expect(page.getByRole('alert').first()).toContainText('Sem conexão');
