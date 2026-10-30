@@ -135,13 +135,14 @@ test('respostas fora de ordem, preço na URL e recuperação de conexão', async
   await expect(page.getByLabel('Buscar NFTs')).toHaveValue('Ivory');
   if (await page.getByRole('button', { name: 'Filtros', exact: true }).isVisible())
     await page.getByRole('button', { name: 'Filtros', exact: true }).click();
-  await page.getByLabel('Preço mínimo (ETH)').fill('0.1');
+  await page.locator('.precise-prices summary').click();
+  await page.getByLabel('Preço mínimo (ETH)').fill('1.8');
   await expect(page.locator('.nft-card')).toHaveCount(3);
-  await expect(page).toHaveURL((url) => JSON.parse(url.searchParams.get('min')!) === '0.1');
+  await expect(page).toHaveURL((url) => JSON.parse(url.searchParams.get('min')!) === '1.8');
   await page.locator('.demo-panel summary').click();
   await page.getByLabel('Cenário', { exact: true }).selectOption('offline');
   await page.getByRole('button', { name: 'Aplicar cenário', exact: true }).click();
-  await expect(page.getByRole('alert')).toContainText('Sem conexão');
+  await expect(page.getByRole('alert').first()).toContainText('Sem conexão');
   await page.getByLabel('Cenário', { exact: true }).selectOption('normal');
   await page.getByRole('button', { name: 'Aplicar cenário', exact: true }).click();
   await expect(page.locator('.nft-card')).toHaveCount(3);

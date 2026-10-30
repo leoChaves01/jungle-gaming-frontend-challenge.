@@ -15,7 +15,7 @@ const summary = {
     chrome: 'Playwright Chromium headless shell',
   },
   conditions:
-    'Build de produção, MSW padrão, cache limpo por medição, throttling simulado padrão Lighthouse. Sem remoção de assets ou funcionalidades.',
+    'Build de produção, MSW padrão, cache limpo por medição, compressão HTTP padrão para todos os clientes do preview, throttling simulado padrão Lighthouse. Sem remoção de assets ou funcionalidades.',
   results: [],
 };
 for (const page of ['home', 'detail'])
@@ -68,3 +68,4 @@ for (const page of ['home', 'detail'])
     summary.results.push({ page, profile, runs, median });
     await fs.writeFile(`${root}/summary.json`, JSON.stringify(summary, null, 2));
   }
+

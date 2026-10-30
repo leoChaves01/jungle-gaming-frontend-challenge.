@@ -19,6 +19,15 @@ const Favorites = lazyRouteComponent(() => import('./account'), 'Favorites');
 const root = createRootRoute({
   component: Layout,
   notFoundComponent: NotFound,
+  errorComponent: () => (
+    <main className="empty" role="alert">
+      <h1>Não foi possível abrir esta página</h1>
+      <p>Recarregue para reconectar à demonstração. Seus dados locais serão preservados.</p>
+      <button className="primary-link" onClick={() => location.reload()}>
+        Recarregar página
+      </button>
+    </main>
+  ),
 });
 const protect = async () => {
   const session = await queryClient.fetchQuery({
@@ -39,7 +48,7 @@ const home = createRoute({
     q: String(s.q || ''),
     category: String(s.category || ''),
     network: String(s.network || ''),
-    sort: ['low', 'high'].includes(String(s.sort)) ? String(s.sort) : 'recent',
+    sort: ['low', 'high', 'new', 'popular'].includes(String(s.sort)) ? String(s.sort) : 'recent',
     page: Math.max(1, Math.floor(Number(s.page) || 1)),
     min: /^\d+(\.\d{1,18})?$/.test(String(s.min)) ? String(s.min) : '',
     max: /^\d+(\.\d{1,18})?$/.test(String(s.max)) ? String(s.max) : '',

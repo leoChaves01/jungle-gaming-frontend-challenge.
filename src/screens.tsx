@@ -1,4 +1,3 @@
-import * as Dialog from '@radix-ui/react-dialog';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Link,
@@ -9,25 +8,23 @@ import {
   useSearch,
 } from '@tanstack/react-router';
 import {
-  ArrowRight,
   ArrowUpRight,
   Heart,
   House,
-  Layers,
   Menu,
   Search as SearchIcon,
-  ShieldCheck,
   ShoppingBag,
   SlidersHorizontal,
   UserRound,
-  Wallet as WalletIcon,
-  X,
+  ShieldCheck,
 } from 'lucide-react';
-import { useEffect, useId, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { beginSessionTransition, get, message, post, queryClient } from './api';
 import { Button } from './components/ui/button';
 import type { NFT, Quote, Search, User } from './contracts';
 import { useRealtime } from './realtime';
+import { Editorial, ReferenceFooter } from './editorial';
+const MenuDrawer = lazy(() => import('./menu-drawer'));
 export const useSession = () =>
   useQuery({
     queryKey: ['session'],
@@ -53,7 +50,7 @@ export function Skeleton({ cards = false, detail = false }: { cards?: boolean; d
     );
   return (
     <div aria-label="Carregando" role="status" className={cards ? 'cards' : ''}>
-      {Array.from({ length: cards ? 8 : 1 }, (_, i) => (
+      {Array.from({ length: cards ? 9 : 1 }, (_, i) => (
         <div key={i} className="skeleton" />
       ))}
     </div>
@@ -145,6 +142,7 @@ export function Layout() {
   const cart = useCart();
   const navigate = useNavigate();
   const [menu, setMenu] = useState(false);
+  const menuTrigger = useRef<HTMLButtonElement>(null);
   const notice = useRealtime(user?.id);
   const path = useRouterState({ select: (s) => s.location.pathname });
   useEffect(() => {
@@ -191,16 +189,30 @@ export function Layout() {
           <span className="logo-dot">®</span>
         </Link>
         <nav aria-label="Principal" className="desktop-nav">
-          <Navigation />
+          <Link to="/" activeOptions={{ exact: true }}>
+            Início
+          </Link>
+          <Link to="/" hash="catalog">
+            Mercado
+          </Link>
+          <Link to="/" hash="creators">
+            Criadores
+          </Link>
+          <Link to="/" hash="journal">
+            Aprenda
+          </Link>
         </nav>
         <div className="header-actions">
+          <Link to="/" hash="market-search" aria-label="Abrir busca" className="header-search">
+            <SearchIcon size={20} />
+          </Link>
           <Link
             to="/cart"
-            aria-label={`Carrinho (${cart.data?.lines.reduce((n, l) => n + l.quantity, 0) || 0})`}
+            aria-label={`Carrinho (${cart.data?.lines?.reduce((n, l) => n + l.quantity, 0) || 0})`}
             className="cart-link"
           >
             <ShoppingBag size={20} />
-            <span>{cart.data?.lines.reduce((n, l) => n + l.quantity, 0) || 0}</span>
+            <span>{cart.data?.lines?.reduce((n, l) => n + l.quantity, 0) || 0}</span>
           </Link>
           {user ? (
             <Button variant="outline" size="sm" onClick={() => logout.mutate()}>
@@ -211,30 +223,31 @@ export function Layout() {
               <Link to="/login">Entrar</Link>
             </Button>
           )}
-          <Dialog.Root open={menu} onOpenChange={setMenu}>
-            <Dialog.Trigger asChild>
-              <Button variant="ghost" className="mobile-menu" aria-label="Abrir menu">
-                <Menu />
-              </Button>
-            </Dialog.Trigger>
-            <Dialog.Portal>
-              <Dialog.Overlay className="overlay" />
-              <Dialog.Content className="dialog drawer">
-                <Dialog.Title>Menu</Dialog.Title>
-                <Dialog.Description>Navegue pelo marketplace.</Dialog.Description>
-                <nav className="stack">
-                  <Navigation close={() => setMenu(false)} />
-                </nav>
-                <Dialog.Close asChild>
-                  <Button variant="outline" aria-label="Fechar menu">
-                    <X />
-                  </Button>
-                </Dialog.Close>
-              </Dialog.Content>
-            </Dialog.Portal>
-          </Dialog.Root>
+          <Button
+            ref={menuTrigger}
+            variant="ghost"
+            className="mobile-menu"
+            aria-label="Abrir menu"
+            aria-haspopup="dialog"
+            aria-expanded={menu}
+            onClick={() => setMenu(true)}
+          >
+            <Menu />
+          </Button>
+          {menu && (
+            <Suspense fallback={<span role="status">Abrindo menu…</span>}>
+              <MenuDrawer onClose={() => setMenu(false)} trigger={menuTrigger}>
+                <Navigation close={() => setMenu(false)} />
+              </MenuDrawer>
+            </Suspense>
+          )}
         </div>
       </header>
+      {cart.error && (
+        <div className="api-notice">
+          <ErrorBox error={cart.error} retry={() => void cart.refetch()} />
+        </div>
+      )}
       {notice && (
         <div className="live-notice" role="status">
           {notice}
@@ -243,38 +256,9 @@ export function Layout() {
       <main id="main" tabIndex={-1} className={path === '/' ? 'home-page' : ''}>
         <Outlet />
       </main>
-      <section className="benefits">
-        <div>
-          <ShieldCheck />
-          <h3>Colecione com confiança</h3>
-          <p>Transparência em cada detalhe.</p>
-        </div>
-        <div>
-          <WalletIcon />
-          <h3>Sua coleção, suas escolhas</h3>
-          <p>Carteiras e redes em um só lugar.</p>
-        </div>
-        <div>
-          <Layers />
-          <h3>Descubra o extraordinário</h3>
-          <p>Arte digital de novos criadores.</p>
-        </div>
-      </section>
-      <footer>
-        <div>
-          <Link to="/" className="logo">
-            Kurio®
-          </Link>
-          <p>Arte, comunidade e novas possibilidades.</p>
-        </div>
-        <nav aria-label="Rodapé">
-          <Link to="/">Marketplace</Link>
-          <Link to="/profile">Meu perfil</Link>
-          <Link to="/wallets">Minhas carteiras</Link>
-        </nav>
-        <p>© 2026 Kurio. Projeto demonstrativo.</p>
+      <ReferenceFooter>
         <DemoPanel />
-      </footer>
+      </ReferenceFooter>
       <nav className="bottom-nav" aria-label="Navegação mobile">
         <Link to="/" aria-label="Início">
           <House />
@@ -319,6 +303,7 @@ function DemoPanel() {
           'race',
           'offline',
           'server-error',
+          'invalid-response',
           'expired',
           'favorite-error',
           'declined',
@@ -378,10 +363,25 @@ export function Card({ nft }: { nft: NFT }) {
   );
 }
 export function Home() {
-  const search = useSearch({ from: '/' });
+  const params = useSearch({ strict: false });
+  const search: Search = {
+    q: '',
+    category: '',
+    network: '',
+    sort: 'recent',
+    page: 1,
+    min: '',
+    max: '',
+    ...params,
+  };
   const navigate = useNavigate();
   const [text, setText] = useState(search.q);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [range, setRange] = useState({ min: search.min || '0', max: search.max || '12.3' });
+  useEffect(
+    () => setRange({ min: search.min || '0', max: search.max || '12.3' }),
+    [search.min, search.max],
+  );
   useEffect(() => setText(search.q), [search.q]);
   const update = (next: Partial<Search>) =>
     void navigate({
@@ -391,7 +391,12 @@ export function Home() {
   const catalog = useQuery({
     queryKey: ['nfts', search],
     queryFn: ({ signal }) =>
-      get<{ items: NFT[]; total: number }>(
+      get<{
+        items: NFT[];
+        total: number;
+        categories: Record<string, number>;
+        networks: Record<string, number>;
+      }>(
         '/nfts?' + new URLSearchParams(Object.entries(search).map(([k, v]) => [k, String(v)])),
         signal,
       ),
@@ -399,6 +404,7 @@ export function Home() {
   return (
     <>
       <form
+        id="market-search"
         className="market-search"
         onSubmit={(e) => {
           e.preventDefault();
@@ -447,7 +453,7 @@ export function Home() {
           </a>
           <div className="hero-stats">
             <span>
-              <strong>32+</strong>Obras exclusivas
+              <strong>36+</strong>Obras exclusivas
             </span>
             <span>
               <strong>4</strong>Coleções
@@ -487,51 +493,120 @@ export function Home() {
         </div>
         <div className="catalog-layout">
           <aside id="catalog-filters" className={`filters ${filtersOpen ? 'filters-open' : ''}`}>
-            <h3>Filtros</h3>
-            <Select
-              label="Categoria"
-              value={search.category}
-              onChange={(e) => update({ category: e.target.value })}
-            >
-              <option value="">Todas as categorias</option>
-              {['Arte', 'Colecionáveis', 'Fotografia', 'Gaming'].map((c) => (
-                <option key={c}>{c}</option>
+            <h3>Coleções</h3>
+            <div className="filter-links" aria-label="Coleções">
+              {[
+                'Arte',
+                'Fotografia',
+                'Música',
+                'Arte 3D',
+                'Colecionáveis',
+                'Generativa',
+                'Gaming',
+                'Assinaturas',
+                'Utilidade',
+              ].map((category) => (
+                <button
+                  key={category}
+                  aria-pressed={search.category === category}
+                  onClick={() => update({ category: search.category === category ? '' : category })}
+                >
+                  {category === 'Arte'
+                    ? 'Arte digital'
+                    : category === 'Gaming'
+                      ? 'Jogos'
+                      : category}
+                  <span>({catalog.data?.categories?.[category] ?? 0})</span>
+                </button>
               ))}
-            </Select>
-            <Select
-              label="Rede"
-              value={search.network}
-              onChange={(e) => update({ network: e.target.value })}
-            >
-              <option value="">Todas as redes</option>
-              <option>Ethereum</option>
-              <option>Polygon</option>
-            </Select>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setText('');
-                update({ q: '', category: '', network: '', sort: 'recent', min: '', max: '' });
-              }}
-            >
-              Limpar filtros
-            </Button>
-            <Field
-              label="Preço mínimo (ETH)"
-              type="number"
-              min="0"
-              step="0.0001"
-              value={search.min}
-              onChange={(e) => update({ min: e.target.value })}
-            />
-            <Field
-              label="Preço máximo (ETH)"
-              type="number"
-              min="0"
-              step="0.0001"
-              value={search.max}
-              onChange={(e) => update({ max: e.target.value })}
-            />
+            </div>
+            <h3>Faixa de preço</h3>
+            <div className="price-range">
+              <input
+                type="range"
+                aria-label="Ajustar preço mínimo"
+                min="0"
+                max="12.3"
+                step="0.01"
+                value={range.min}
+                onChange={(e) =>
+                  setRange({
+                    ...range,
+                    min: String(Math.min(Number(e.target.value), Number(range.max))),
+                  })
+                }
+              />
+              <input
+                type="range"
+                aria-label="Ajustar preço máximo"
+                min="0"
+                max="12.3"
+                step="0.01"
+                value={range.max}
+                onChange={(e) =>
+                  setRange({
+                    ...range,
+                    max: String(Math.max(Number(e.target.value), Number(range.min))),
+                  })
+                }
+              />
+              <p>
+                Preço: {range.min} – {range.max} ETH
+              </p>
+              <Button onClick={() => update({ min: range.min, max: range.max })}>Aplicar</Button>
+            </div>
+            <details className="precise-prices">
+              <summary>Valores exatos</summary>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setText('');
+                  update({ q: '', category: '', network: '', sort: 'recent', min: '', max: '' });
+                }}
+              >
+                Limpar filtros
+              </Button>
+              <Field
+                label="Preço mínimo (ETH)"
+                type="number"
+                min="0"
+                step="0.0001"
+                value={search.min}
+                onChange={(e) => update({ min: e.target.value })}
+              />
+              <Field
+                label="Preço máximo (ETH)"
+                type="number"
+                min="0"
+                step="0.0001"
+                value={search.max}
+                onChange={(e) => update({ max: e.target.value })}
+              />
+            </details>
+            <h3>Rede</h3>
+            <div className="filter-links">
+              {['Ethereum', 'Polygon'].map((network) => (
+                <button
+                  key={network}
+                  aria-pressed={search.network === network}
+                  onClick={() => update({ network: search.network === network ? '' : network })}
+                >
+                  {network}
+                  <span>({catalog.data?.networks?.[network] ?? 0})</span>
+                </button>
+              ))}
+            </div>
+            <Link className="featured-nft" to="/nft/$id" params={{ id: '2' }}>
+              <h3>NFT EM DESTAQUE</h3>
+              <strong>OFERTA LIMITADA</strong>
+              <img
+                src="/art/sage-small.webp"
+                width="320"
+                height="320"
+                alt="Sage Nomad em destaque"
+                loading="lazy"
+              />
+            </Link>
           </aside>
           <div>
             <div className="collection-tabs" aria-label="Ordenação rápida">
@@ -544,17 +619,17 @@ export function Home() {
               </button>
               <button
                 type="button"
-                aria-pressed={search.sort === 'low'}
-                onClick={() => update({ sort: 'low' })}
+                aria-pressed={search.sort === 'new'}
+                onClick={() => update({ sort: 'new' })}
               >
-                Menor preço
+                Novos lançamentos
               </button>
               <button
                 type="button"
-                aria-pressed={search.sort === 'high'}
-                onClick={() => update({ sort: 'high' })}
+                aria-pressed={search.sort === 'popular'}
+                onClick={() => update({ sort: 'popular' })}
               >
-                Maior preço
+                Em alta
               </button>
             </div>
             <div className="catalog-toolbar">
@@ -567,7 +642,9 @@ export function Home() {
                 value={search.sort}
                 onChange={(e) => update({ sort: e.target.value })}
               >
-                <option value="recent">Mais recentes</option>
+                <option value="recent">Listados recentemente</option>
+                <option value="new">Novos lançamentos</option>
+                <option value="popular">Em alta</option>
                 <option value="low">Menor preço</option>
                 <option value="high">Maior preço</option>
               </Select>
@@ -599,7 +676,7 @@ export function Home() {
               <span>Página {search.page}</span>
               <Button
                 variant="outline"
-                disabled={!catalog.data || search.page * 8 >= catalog.data.total}
+                disabled={!catalog.data || search.page * 9 >= catalog.data.total}
                 onClick={() => update({ page: search.page + 1 })}
               >
                 Próxima
@@ -608,22 +685,7 @@ export function Home() {
           </div>
         </div>
       </section>
-      <section className="collect-banner">
-        <img src="/art/emerald.webp" alt="Emerald Ape" width="180" height="180" loading="lazy" />
-        <div>
-          <p className="eyebrow">SUA IDENTIDADE DIGITAL</p>
-          <h2>
-            Uma coleção tão única
-            <br />
-            quanto você.
-          </h2>
-        </div>
-        <Button asChild>
-          <Link to="/register">
-            Comece sua jornada <ArrowRight size={18} />
-          </Link>
-        </Button>
-      </section>
+      <Editorial />
     </>
   );
 }
@@ -685,7 +747,13 @@ export function Detail() {
   });
   const related = useQuery({
     queryKey: ['nfts', 'related'],
-    queryFn: ({ signal }) => get<{ items: NFT[]; total: number }>('/nfts?page=1', signal),
+    queryFn: ({ signal }) =>
+      get<{
+        items: NFT[];
+        total: number;
+        categories: Record<string, number>;
+        networks: Record<string, number>;
+      }>('/nfts?page=1', signal),
   });
   const cart = useCart();
   const [edition, setEdition] = useState('standard'),

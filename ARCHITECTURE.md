@@ -2,7 +2,7 @@
 
 ## Camadas
 
-`src/contracts.ts` define entidades de transporte e conversão decimal. `src/api.ts` é o cliente Axios e configura o QueryClient. `src/router.tsx` declara rotas, search params e guardas. `src/screens.tsx` contém os fluxos e componentes de apresentação. `src/components/ui/button.tsx` adapta o padrão shadcn/ui (Slot, CVA e Tailwind Merge); diálogos usam Radix com foco contido e restauração ao acionador. `src/realtime.ts` cuida do ciclo Socket.IO, versões e reconciliação. `src/mocks/` é o único lugar com fixtures e regras simuladas de negócio.
+`src/contracts.ts` define entidades de transporte e conversão decimal. `src/api.ts` é o cliente Axios e configura o QueryClient. `src/router.tsx` declara rotas, search params e guardas. `src/screens.tsx` contém layout, catálogo, detalhe e componentes compartilhados. `src/account.tsx` e `src/purchase.tsx` contêm conta e compra, carregados sob demanda por lazyRouteComponent do TanStack Router. `src/components/ui/button.tsx` adapta o padrão shadcn/ui (Slot, CVA e Tailwind Merge); diálogos usam Radix com foco contido e restauração ao acionador. `src/realtime.ts` cuida do ciclo Socket.IO, versões e reconciliação. `src/mocks/` é o único lugar com fixtures e regras simuladas de negócio.
 
 Não há respostas fictícias em componentes ou no Axios. Interações REST atravessam a rede interceptada por MSW. A persistência do mock é localStorage; sessão, contas e alterações sobrevivem ao refresh. Isso é uma simulação de servidor em um único navegador, não autenticação ou armazenamento seguros para produção.
 
@@ -76,7 +76,7 @@ MSW remove o prefixo `/socket.io/` ao fazer matching, por isso o handler usa `ws
 | nft.updated   | id estável do evento, resourceId, version | Invalida catálogo, detalhe, carrinho/cotação e anuncia mudança |
 | order.updated | id, resourceId, version, userId           | Reconcilia pedido e carrinho do usuário                        |
 
-Versões menores/iguais são descartadas por recurso. Eventos privados de outra sessão são ignorados. Cleanup remove listeners e fecha socket. Em connect/reconnect, consultas ativas são invalidadas e reconsultadas por REST. Eventos funcionam como sinais de invalidação; REST permanece fonte autoritativa, evitando aplicar payload antigo sobre um recurso atual. Pedido pendente também faz polling REST a cada 1,5 s como recuperação complementar.
+Versões menores/iguais são descartadas por recurso. Eventos privados de outra sessão são ignorados. Cleanup remove listeners e fecha socket. Em connect/reconnect, consultas ativas são invalidadas e reconsultadas por REST. Eventos cancelam consultas correspondentes que ainda estão em andamento antes de invalidar e buscar novamente. Isso inclui a primeira consulta sem dados em cache: apenas invalidá-la permite que uma resposta antiga, já em transporte, se torne o resultado final. REST permanece fonte autoritativa. Pedido pendente também faz polling REST a cada 1,5 s como recuperação complementar.
 
 ## Cache, falhas e UX
 
@@ -90,10 +90,22 @@ Skeletons possuem shimmer e respeitam prefers-reduced-motion. Imagens e fontes s
 - Persistência é por origem/navegador. Não há sincronização transacional multiaba ou entre dispositivos; fechar a aba interrompe timers, e a consulta seguinte reconcilia pelo relógio persistido.
 - Laboratório é intencionalmente público no build demo; não é endpoint administrativo seguro.
 - Endereços de carteira recebem validação sintática, não verificação on-chain.
-- Categoria e rede são filtros combináveis entre si, com uma seleção por dimensão. A faixa de preço usa campos numéricos mínimo/máximo; não há multi-seleção de categorias nem slider nesta versão.
-- O projeto privilegia fluxo completo, contratos e evidência executável. Extração adicional de módulos de páginas a partir de `screens.tsx` é uma melhoria de manutenção possível.
+- Categoria e rede são filtros combináveis entre si, com uma seleção por dimensão. A faixa de preço oferece dois controles deslizantes com aplicação explícita e campos numéricos em “Valores exatos”; não há multi-seleção de categorias.
+- O projeto privilegia fluxo completo, contratos e evidência executável. Conta e compra foram separadas em chunks sob demanda. Componentes compartilhados ainda podem ser extraídos de `screens.tsx` para melhorar a manutenção.
 - O destino autorizado é leoChaves01/jungle-gaming-frontend-challenge. (com ponto final); evidências da publicação constam em VALIDATION.md.
 
 ## Inicialização e performance
 
-O build antecipa o download do chunk de mocks com modulepreload, junto da imagem de destaque e da fonte local. A montagem da aplicação aguarda a ativação do MSW; o Socket.IO é importado depois dessa ativação. O skeleton do detalhe reserva espaço para galeria e informações. Textos menores foram ajustados para pelo menos 12 px por legibilidade. Tailwind analisa somente src, evitando que relatórios de auditoria alterem o CSS gerado. Essas otimizações integram o build normal e não dependem de detecção de Lighthouse.
+O build antecipa o download do chunk de mocks com modulepreload, junto da imagem de destaque e da fonte local. A montagem da aplicação aguarda a ativação do MSW; o Socket.IO é importado depois dessa ativação. O skeleton do detalhe reserva espaço para galeria e informações. Texto, contraste, foco e zoom são verificados nos perfis mobile e desktop. Tailwind analisa somente src, evitando que relatórios de auditoria alterem o CSS gerado. Essas otimizações integram o build normal e não dependem de detecção de Lighthouse.
+
+A separação das rotas e do menu reduziu o chunk inicial de 505,45 para 458,19 kB antes de gzip. O build deixou de emitir o aviso de chunk acima de 500 kB; a meta Lighthouse mobile é avaliada separadamente nos relatórios.
+
+O drawer mobile usa import dinâmico em src/menu-drawer.tsx. A biblioteca de diálogo é baixada quando o menu é aberto; Radix continua controlando o foco, Escape e fechamento, com retorno explícito ao botão acionador.
+
+## Resposta inválida na abertura
+
+Foi observado um TypeError no cabeçalho ao reduzir `cart.lines` inexistente. A borda HTTP agora rejeita respostas não JSON (inclusive fallback HTML de SPA com status 200) e cotações sem lista de linhas antes de armazená-las em cache. O cabeçalho protege a leitura e apresenta erro recuperável; o root possui uma tela de recuperação em português. O cenário `invalid-response` reproduz a resposta HTML via MSW, inclusive após refresh, com cobertura desktop/mobile. Não foi possível recuperar o corpo da resposta original da aba; HTML de fallback é uma hipótese coberta, não uma causa confirmada por captura de rede.
+
+O login/cadastro usa Radix Dialog com fundo de catálogo inerte, foco contido e Escape. Busca/coleções/editorial permanecem componentes reais da aplicação. Ações fora do escopo mostram indisponibilidade explícita. “Em alta” ordena por versão do NFT e id (critério determinístico da simulação); “Novos lançamentos” ordena id decrescente. Ambos compõem o estado da URL.
+
+O preview aplica compressão HTTP negociada (gzip/Brotli) a todos os clientes por middleware `compression`, sem modificar o conteúdo dos assets. Isso torna o servidor local de auditoria mais próximo da hospedagem estática de produção. A versão anterior do preview entregava JavaScript sem `Content-Encoding`; as auditorias anteriores são preservadas como diagnóstico. O middleware não participa do bundle do navegador nem remove funcionalidades.

@@ -16,6 +16,6 @@ Subjects: brown chimp with cream round green sunglasses, emerald varsity jacket 
 
 ## Ajustes e limites
 
-A composição usa fundo marrom, ocre, fonte monoespaçada, hero com retrato, filtros laterais no desktop e recolhíveis no mobile, cartões em duas colunas e navegação inferior. Labels, foco e controles foram ampliados para legibilidade. Os preços, nomes secundários, filtros e quantidades pertencem às fixtures funcionais; não copiam todos os valores da imagem. Os SVGs da versão inicial permanecem no histórico de trabalho, mas os NFTs usam WebP.
+A composição usa fundo marrom, ocre, fonte monoespaçada, hero com retrato, filtros laterais no desktop e recolhíveis no mobile, cartões em duas colunas e navegação inferior. Labels, foco e controles foram ampliados para legibilidade. Os nove nomes e preços iniciais seguem os prints mais recentes. Os demais NFTs e as contagens de categorias/redes pertencem às fixtures funcionais; não reproduzem números decorativos sem dados correspondentes. Os SVGs da versão inicial permanecem no histórico de trabalho, mas os NFTs usam WebP.
 
 Fonte local Roboto Mono, com licença em `public/fonts/`. Ícones Lucide. A inspeção de todos os frames e a exportação dos assets originais continuam dependendo de acesso ao arquivo Figma. As baselines Playwright verificam regressões da implementação, não comprovam equivalência ao design.

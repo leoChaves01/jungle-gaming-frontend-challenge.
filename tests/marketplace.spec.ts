@@ -35,23 +35,27 @@ test.beforeEach(async ({ page }) => {
 test('01 catálogo: busca, filtros combinados, ordenação, paginação e histórico', async ({
   page,
 }) => {
-  await expect(page.locator('.nft-card')).toHaveCount(8);
+  await expect(page.locator('.nft-card')).toHaveCount(9);
   await page.getByRole('button', { name: 'Próxima', exact: true }).click();
   await expect(page).toHaveURL(/page=2/);
   if (await page.getByRole('button', { name: 'Filtros', exact: true }).isVisible())
     await page.getByRole('button', { name: 'Filtros', exact: true }).click();
-  await page.getByLabel('Categoria', { exact: true }).selectOption('Arte');
+  await page.locator('.filters').getByRole('button', { name: 'Arte digital' }).click();
   await expect(page).not.toHaveURL(/page=2/);
-  await page.getByLabel('Rede', { exact: true }).selectOption('Ethereum');
+  await page.locator('.filters').getByRole('button', { name: 'Ethereum' }).click();
   await page.getByLabel('Ordenar por').selectOption('high');
-  await expect(page.locator('.nft-card')).toHaveCount(5);
+  await expect(page.locator('.nft-card')).toHaveCount(6);
   await page.reload();
-  await expect(page.getByLabel('Categoria', { exact: true })).toHaveValue('Arte');
+  if (await page.getByRole('button', { name: 'Filtros', exact: true }).isVisible())
+    await page.getByRole('button', { name: 'Filtros', exact: true }).click();
+  await expect(
+    page.locator('.filters').getByRole('button', { name: 'Arte digital' }),
+  ).toHaveAttribute('aria-pressed', 'true');
   await page.getByLabel('Buscar NFTs').fill('inexistente');
   await page.getByRole('button', { name: 'Buscar', exact: true }).click();
   await expect(page.getByText('Nenhum NFT encontrado')).toBeVisible();
   await page.goBack();
-  await expect(page.locator('.nft-card')).toHaveCount(5);
+  await expect(page.locator('.nft-card')).toHaveCount(6);
 });
 test('02 detalhe direto, edição indisponível, limite e 404', async ({ page }) => {
   await page.goto('/nft/1');
@@ -113,15 +117,15 @@ test('05 carrinho: quantidades, cupom, refresh, login e remoção', async ({ pag
   await add(page);
   await page.goto('/cart');
   await page.getByLabel('Quantidade de Emerald Ape #042').fill('2');
-  await expect(page.getByTestId('total')).toHaveText('0.026 ETH');
+  await expect(page.getByTestId('total')).toHaveText('2.381 ETH');
   await page.getByLabel('Cupom de desconto').fill('EXPIRED');
   await page.getByRole('button', { name: 'Aplicar cupom', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('expirado');
   await page.getByLabel('Cupom de desconto').fill('JUNGLE10');
   await page.getByRole('button', { name: 'Aplicar cupom', exact: true }).click();
-  await expect(page.getByTestId('total')).toHaveText('0.0235 ETH');
+  await expect(page.getByTestId('total')).toHaveText('2.143 ETH');
   await page.getByRole('button', { name: 'Remover cupom' }).click();
-  await expect(page.getByTestId('total')).toHaveText('0.026 ETH');
+  await expect(page.getByTestId('total')).toHaveText('2.381 ETH');
   await page.reload();
   await expect(page.getByLabel('Quantidade de Emerald Ape #042')).toHaveValue('2');
   await login(page);
@@ -135,10 +139,10 @@ test('06 compra completa e recibo imutável', async ({ page }) => {
   await page.getByRole('button', { name: 'Confirmar compra simulada' }).click();
   await expect(page.getByRole('heading', { name: 'Pedido confirmado!' })).toBeVisible();
   const url = page.url();
-  await expect(page.getByTestId('total')).toHaveText('0.0135 ETH');
+  await expect(page.getByTestId('total')).toHaveText('1.191 ETH');
   await page.locator('.demo-panel summary').click();
   await page.getByRole('button', { name: 'Alterar preço NFT 1' }).click();
-  await expect(page.getByTestId('total')).toHaveText('0.0135 ETH');
+  await expect(page.getByTestId('total')).toHaveText('1.191 ETH');
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Pedido confirmado!' })).toBeVisible();
   await page.goto('/cart');
@@ -228,6 +232,16 @@ test('11 pedido pendente recupera após interrupção e refresh', async ({ page 
 test('12 teclado e foco de diálogo', async ({ page }) => {
   await page.keyboard.press('Tab');
   await expect(page.getByText('Pular para conteúdo')).toBeFocused();
+  const menu = page.getByRole('button', { name: 'Abrir menu' });
+  if (await menu.isVisible()) {
+    await menu.click();
+    await expect(page.getByRole('button', { name: 'Fechar menu' })).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('dialog').getByRole('link', { name: 'Explorar' })).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(menu).toBeFocused();
+  }
   await login(page);
   await page.goto('/wallets');
   const trigger = page.getByRole('button', { name: 'Adicionar carteira' });
@@ -245,7 +259,7 @@ test('13 skeleton, falha REST e recuperação', async ({ page }) => {
   await expect(page.getByLabel('Carregando', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Emerald Ape #042' })).toBeVisible();
   await demo(page, 'server-error');
-  await expect(page.getByRole('alert')).toBeVisible();
+  await expect(page.getByRole('alert').first()).toBeVisible();
   await demo(page, 'normal');
   await expect(page.getByRole('heading', { name: 'Emerald Ape #042' })).toBeVisible();
 });
@@ -257,7 +271,7 @@ test('14 expiração no checkout preserva contexto e carrinho', async ({ page })
   await page.getByLabel('Senha', { exact: true }).fill('Demo123!');
   await page.getByRole('button', { name: 'Entrar na conta' }).click();
   await expect(page).toHaveURL(/checkout/);
-  await expect(page.getByTestId('total')).toHaveText('0.0135 ETH');
+  await expect(page.getByTestId('total')).toHaveText('1.191 ETH');
 });
 test('15 sem overflow em 390, 768 e 1440', async ({ page }) => {
   await checkout(page);
@@ -291,6 +305,7 @@ test('16 regressão visual início detalhe carrinho pagamento', async ({ page })
     // Load offscreen artwork through normal scrolling, then capture from a stable origin.
     await page.mouse.move(0, 0);
     for (const img of await page.locator('main img').all()) {
+      if (!(await img.isVisible())) continue;
       await img.evaluate((element) => element.scrollIntoView({ behavior: 'instant' }));
       await expect(img).toHaveJSProperty('complete', true);
     }
@@ -324,4 +339,32 @@ test('16 regressão visual início detalhe carrinho pagamento', async ({ page })
     fullPage: true,
     animations: 'disabled',
   });
+});
+
+test('17 abertura recupera resposta HTML inesperada da API sem derrubar a página', async ({
+  page,
+}) => {
+  await demo(page, 'invalid-response');
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Explore o marketplace' })).toBeVisible();
+  await expect(page.locator('.nft-card')).toHaveCount(9);
+  await expect(page.getByRole('alert')).toContainText('A conexão com a API foi interrompida');
+  await expect(page.getByText('Something went wrong!')).toHaveCount(0);
+  await demo(page, 'normal');
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Carrinho (0)', exact: true })).toBeVisible();
+});
+
+test('18 login em diálogo, visibilidade de senha e ação auxiliar honesta', async ({ page }) => {
+  await page.getByRole('link', { name: 'Entrar', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel('Senha', { exact: true }).fill('Demo123!');
+  await dialog.getByRole('button', { name: 'Mostrar senha' }).click();
+  await expect(dialog.getByLabel('Senha', { exact: true })).toHaveAttribute('type', 'text');
+  await dialog.getByRole('button', { name: 'Continuar com Google', exact: false }).click();
+  await expect(dialog.getByRole('status')).toContainText('não disponível');
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(page).not.toHaveURL(/\/login/);
 });

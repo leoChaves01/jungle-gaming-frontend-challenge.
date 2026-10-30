@@ -24,7 +24,7 @@ type DB = {
   scenario: string;
   counter: number;
 };
-const key = 'greenmint.mock.v2';
+const key = 'greenmint.mock.v3';
 export async function hash(password: string, salt: string) {
   const key = await crypto.subtle.importKey(
     'raw',
@@ -82,27 +82,31 @@ export async function reset() {
       favorites: [],
     })),
   );
-  db.nfts = Array.from({ length: 32 }, (_, i) => ({
+  db.nfts = Array.from({ length: 36 }, (_, i) => ({
     id: String(i + 1),
     name:
       [
-        'Emerald Ape',
-        'Sage Nomad',
-        'Ivory Baron',
-        'Golden Beat',
-        'Cosmic Bloom',
-        'Violet Nomad',
-        'Golden Signal',
-        'Neon Vessel',
-      ][i % 8] + ` #${String(42 + i).padStart(3, '0')}`,
+        'Emerald Ape #042',
+        'Sage Nomad #009',
+        'Neon Vessel #552',
+        'Cosmic Bloom #118',
+        'Violet Nomad #314',
+        'Ivory Baron #088',
+        'Golden Beat #207',
+        'Golden Frequency #071',
+        'Golden Signal #160',
+      ][i % 9] + (i < 9 ? '' : ` · Série ${Math.floor(i / 9) + 1}`),
     artist: ['Satoshi Studio', 'Yuki', 'Jungle Collective', 'Pixel Lab'][i % 4],
     category: ['Arte', 'Colecionáveis', 'Fotografia', 'Gaming'][i % 4],
     network: i % 3 ? 'Ethereum' : 'Polygon',
     image:
       '/art/' +
-      ['emerald', 'sage', 'ivory', 'golden', 'sage', 'sage', 'golden', 'ivory'][i % 8] +
+      ['emerald', 'sage', 'ivory', 'sage', 'sage', 'ivory', 'golden', 'golden', 'golden'][i % 9] +
       '.webp',
-    price: eth(BigInt(i + 1) * 12500000000000000n),
+    price: eth(
+      wei(['1.19', '1.69', '1.99', '1.29', '1.39', '1.79', '0.99', '0.59', '0.39'][i % 9]) +
+        BigInt(Math.floor(i / 9)) * 100000000000000000n,
+    ),
     version: 1,
     editions: [
       { id: 'standard', name: 'Original', stock: 8 },

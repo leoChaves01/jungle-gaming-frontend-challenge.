@@ -35,7 +35,17 @@ export const message = (error: unknown) =>
       ? error.message
       : 'Ocorreu um erro.';
 api.interceptors.response.use(
-  (r) => r,
+  (r) => {
+    // A SPA fallback can return index.html with status 200 when the worker
+    // is no longer controlling a suspended tab. Never cache it as API data.
+    if (!String(r.headers['content-type']).includes('application/json')) {
+      throw new Error('A conexão com a API foi interrompida. Recarregue a página para reconectar.');
+    }
+    if (r.config.url === '/cart' && !Array.isArray(r.data?.lines)) {
+      throw new Error('Não foi possível carregar o carrinho. Tente novamente.');
+    }
+    return r;
+  },
   (e) => {
     if (
       e.response?.status === 401 &&

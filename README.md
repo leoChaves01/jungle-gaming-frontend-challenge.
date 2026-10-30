@@ -2,6 +2,8 @@
 
 Implementação React + TypeScript do marketplace de NFTs. **Todas as compras, identidades, carteiras e transações são fictícias.** O enunciado original completo está em [CHALLENGE.md](CHALLENGE.md).
 
+Aplicação publicada: [Kurio na Vercel](https://jungle-gaming-frontend-challenge-iota.vercel.app).
+
 ## Executar
 
 Requisitos: Node.js 22.14 ou superior e npm 10. Um navegador Chromium é instalado separadamente para os testes.
@@ -45,18 +47,19 @@ As duas contas iniciam com uma carteira Ethereum. Um novo cadastro começa sem c
 
 Abra **Laboratório de demonstração** no rodapé de qualquer tela. Selecione o cenário e clique **Aplicar cenário**. O cenário permanece após refresh até ser alterado ou resetado.
 
-| Cenário        | Como observar                                                                                                       |
-| -------------- | ------------------------------------------------------------------------------------------------------------------- |
-| normal         | Fluxo padrão; pedido confirma após cerca de 2,5 s                                                                   |
-| slow           | 2,2 s por REST; abrir detalhe/carrinho para ver shimmer                                                             |
-| race           | Busca com 1 caractere demora 900 ms; outras 80 ms                                                                   |
-| offline        | MSW retorna falha de rede; retorne a normal pelo laboratório                                                        |
-| server-error   | REST retorna 503; retorne a normal e tente novamente                                                                |
-| expired        | Expira a sessão atual; checkout retorna ao login preservando o destino                                              |
-| favorite-error | Favorito falha com 503; atualização otimista é revertida                                                            |
-| declined       | Próximo pedido termina recusado; carrinho preservado                                                                |
-| timeout        | Cria pedido, mas resposta demora 12 s; Axios encerra aos 5 s. Use Recuperar mesma tentativa, inclusive após refresh |
-| pending        | Pedido leva 20 s; interrompa conexão ou atualize a página                                                           |
+| Cenário          | Como observar                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------- |
+| normal           | Fluxo padrão; pedido confirma após cerca de 2,5 s                                                                   |
+| slow             | 2,2 s por REST; abrir detalhe/carrinho para ver shimmer                                                             |
+| race             | Busca com 1 caractere demora 900 ms; outras 80 ms                                                                   |
+| offline          | MSW retorna falha de rede; retorne a normal pelo laboratório                                                        |
+| invalid-response | Retorna HTML em vez de JSON para o carrinho; a página permanece utilizável e permite recuperação                    |
+| server-error     | REST retorna 503; retorne a normal e tente novamente                                                                |
+| expired          | Expira a sessão atual; checkout retorna ao login preservando o destino                                              |
+| favorite-error   | Favorito falha com 503; atualização otimista é revertida                                                            |
+| declined         | Próximo pedido termina recusado; carrinho preservado                                                                |
+| timeout          | Cria pedido, mas resposta demora 12 s; Axios encerra aos 5 s. Use Recuperar mesma tentativa, inclusive após refresh |
+| pending          | Pedido leva 20 s; interrompa conexão ou atualize a página                                                           |
 
 Busca por `inexistente` exercita vazio. `/nft/404` exercita recurso inexistente. Cadastro com `ana@demo.com` exercita conflito. `JUNGLE10` concede 10% de desconto; `EXPIRED` retorna cupom expirado e outros códigos retornam inválido.
 
@@ -82,8 +85,18 @@ Alternativa com CLI autenticada:
 npx vercel --prod
 ```
 
-Após publicar, teste acesso direto e refresh em `/nft/1`, `/cart` e `/checkout`, além do cenário Socket.IO. Repositório de entrega autorizado: [leoChaves01/jungle-gaming-frontend-challenge.](https://github.com/leoChaves01/jungle-gaming-frontend-challenge.). O resultado da publicação será registrado em VALIDATION.md.
+Após publicar, teste acesso direto e refresh em `/nft/1`, `/cart` e `/checkout`, além do cenário Socket.IO. Repositório de entrega autorizado: [leoChaves01/jungle-gaming-frontend-challenge.](https://github.com/leoChaves01/jungle-gaming-frontend-challenge.). O código já foi enviado. A autenticação foi concluída e o projeto foi publicado em https://jungle-gaming-frontend-challenge-iota.vercel.app. O último resultado de validação da versão pública está no relatório abaixo. Veja [VALIDATION.md](VALIDATION.md).
 
 ## Referência visual
 
 O arquivo Figma identifica a página como GreenMint, mas o frame inicial exibe a marca **KURIO**, fundo marrom, botões ocre e tipografia monoespaçada. A implementação usa essa direção. Os quatro personagens foram reconstruídos com ImageGen a partir das capturas fornecidas e otimizados como WebP. Não são exports originais do Figma. Prompts, arquivos originais e substituições estão em [ASSETS.md](ASSETS.md). A fidelidade integral ao Figma permanece pendente; as baselines verificam regressões desta implementação, não equivalência automática ao Figma.
+
+Para verificar a versão publicada, defina `TEST_BASE_URL` com a URL HTTPS e execute `npm test`. Os relatórios públicos serão gravados separadamente em `reports/public-playwright/` e `reports/public-e2e.json`. Não execute duas instâncias do Playwright simultaneamente usando a mesma pasta de resultados.
+
+O CI usa Windows para manter as mesmas baselines. Como o nome do repositório termina em ponto, o workflow faz checkout do SHA exato em uma pasta temporária de nome válido; o diretório padrão do GitHub Actions falha nesse caso.
+
+## Atualização das referências visuais
+
+Os prints enviados em 29/10 orientam o cabeçalho, grade de nove itens, personagens, preços iniciais, banners, Diário da Cunhagem, rodapé e login em diálogo. Avatares de comentários e seleções azuis do Figma não fazem parte da interface. Newsletter, redes sociais, recuperação por e-mail e OAuth exibem avisos de indisponibilidade, sem simular envio ou autenticação bem-sucedida. O catálogo possui 36 NFTs; contagens dos filtros vêm da API e representam a simulação, não números decorativos do frame.
+
+As novas fixtures usam `greenmint.mock.v3`; dados da demonstração anterior em v2 não são apagados, mas não são carregados nesta versão. Use apenas dados fictícios.

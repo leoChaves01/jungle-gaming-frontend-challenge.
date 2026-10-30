@@ -39,10 +39,12 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.64.1",
+    "@types/compression": "^1.8.1",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "compression": "^1.8.2",
     "eslint": "^10.13.0",
     "lighthouse": "^12.6.1",
     "prettier": "^3.9.10",

@@ -95,6 +95,10 @@ export const handlers = [
             : 80
           : 100,
     );
+    if (db.scenario === 'invalid-response' && path === '/cart')
+      return new HttpResponse('<!doctype html><title>SPA fallback</title>', {
+        headers: { 'Content-Type': 'text/html' },
+      });
     if (db.scenario === 'offline') return HttpResponse.error();
     if (db.scenario === 'server-error')
       return error('Serviço temporariamente indisponível. Tente novamente.', 503);
@@ -175,12 +179,28 @@ export const handlers = [
               : wei(b.price) > wei(a.price)
                 ? 1
                 : 0
-            : Number(a.id) - Number(b.id),
+            : sort === 'new'
+              ? Number(b.id) - Number(a.id)
+              : sort === 'popular'
+                ? b.version - a.version || Number(b.id) - Number(a.id)
+                : Number(a.id) - Number(b.id),
       );
       const page = Math.max(1, Number(url.searchParams.get('page') || 1));
       return HttpResponse.json({
-        items: items.slice((page - 1) * 8, page * 8),
+        items: items.slice((page - 1) * 9, page * 9),
         total: items.length,
+        categories: Object.fromEntries(
+          [...new Set(db.nfts.map((n) => n.category))].map((c) => [
+            c,
+            db.nfts.filter((n) => n.category === c).length,
+          ]),
+        ),
+        networks: Object.fromEntries(
+          [...new Set(db.nfts.map((n) => n.network))].map((c) => [
+            c,
+            db.nfts.filter((n) => n.network === c).length,
+          ]),
+        ),
       });
     }
     if (path.startsWith('/nfts/')) {

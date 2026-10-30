@@ -1,10 +1,19 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import compression from 'compression';
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    {
+      name: 'compressed-preview',
+      configurePreviewServer(server) {
+        // Serve the same complete assets with standard HTTP compression for
+        // every preview client, matching a production static host.
+        server.middlewares.use(compression());
+      },
+    },
     {
       name: 'preload-demo-network',
       transformIndexHtml: {

@@ -1,16 +1,18 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
-import { Wallet as WalletIcon } from 'lucide-react';
+import { Eye, EyeOff, X, Wallet as WalletIcon } from 'lucide-react';
 import { useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { api, beginSessionTransition, get, post, queryClient } from './api';
 import { Button } from './components/ui/button';
 import type { NFT, User, Wallet } from './contracts';
-import { Card, ErrorBox, Field, Head, Select, Skeleton, useSession } from './screens';
+import { Card, ErrorBox, Field, Head, Home, Select, Skeleton, useSession } from './screens';
 export function Auth({ register = false }: { register?: boolean }) {
   const navigate = useNavigate();
   const search = useSearch({ strict: false }) as { returnTo?: string };
   const [error, setError] = useState('');
+  const [visiblePassword, setVisiblePassword] = useState(false);
+  const [auxiliary, setAuxiliary] = useState('');
   const mutation = useMutation({
     mutationFn: async (data: Record<string, string>) => {
       await beginSessionTransition();
@@ -34,75 +36,138 @@ export function Auth({ register = false }: { register?: boolean }) {
     mutation.mutate(data);
   }
   return (
-    <div className="auth-grid">
-      <section className="auth-story">
-        <p className="eyebrow">BEM-VINDO AO KURIO</p>
-        <h1>
-          Sua coleção.
-          <br />
-          Sua identidade.
-          <br />
-          <em>Seu universo.</em>
-        </h1>
-        <p>Conecte-se à próxima geração de colecionadores.</p>
-        <div className="auth-art">
-          {[1, 2, 3, 4].map((i) => (
-            <img
-              key={i}
-              src={`/art/${['emerald', 'sage', 'ivory', 'golden'][i - 1]}.webp`}
-              alt="Arte da coleção Kurio"
-              width="200"
-              height="200"
-            />
-          ))}
-        </div>
-      </section>
-      <form className="auth-form panel stack" onSubmit={submit}>
-        <h2>{register ? 'Crie sua conta' : 'Bom ter você de volta'}</h2>
-        <p>
-          {register
-            ? 'Comece a explorar novas possibilidades.'
-            : 'Entre para continuar sua jornada.'}
-        </p>
-        {register && (
-          <Field label="Nome completo" name="name" autoComplete="name" required minLength={2} />
-        )}
-        <Field label="E-mail" name="email" type="email" autoComplete="email" required />
-        <Field
-          label="Senha"
-          name="password"
-          type="password"
-          autoComplete={register ? 'new-password' : 'current-password'}
-          required
-          minLength={8}
-          aria-describedby="auth-hint"
-        />
-        {register && (
-          <Field
-            label="Confirmar senha"
-            name="confirm"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={8}
-          />
-        )}
-        <p id="auth-hint">Use pelo menos 8 caracteres. Demo: ana@demo.com / Demo123!</p>
-        {error && (
-          <p role="alert" className="error">
-            {error}
-          </p>
-        )}
-        {mutation.error && <ErrorBox error={mutation.error} />}
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Aguarde…' : register ? 'Criar conta' : 'Entrar na conta'}
-        </Button>
-        <p>
-          {register ? 'Já tem uma conta?' : 'Ainda não tem uma conta?'}{' '}
-          <Link to={register ? '/login' : '/register'}>{register ? 'Entrar' : 'Cadastre-se'}</Link>
-        </p>
-      </form>
-    </div>
+    <>
+      <div className="auth-background" inert aria-hidden="true">
+        <Home />
+      </div>
+      <Dialog.Root
+        open
+        onOpenChange={(open) => {
+          if (!open) void navigate({ to: '/' });
+        }}
+      >
+        <Dialog.Portal>
+          <Dialog.Overlay className="auth-overlay" />
+          <Dialog.Content
+            className="auth-modal"
+            onCloseAutoFocus={(e) => {
+              e.preventDefault();
+            }}
+          >
+            <Dialog.Title className="auth-tabs">
+              <Link to="/login" search={{ returnTo: search.returnTo }} data-active={!register}>
+                Entrar
+              </Link>
+              <span>|</span>
+              <Link to="/register" search={{ returnTo: search.returnTo }} data-active={register}>
+                Criar conta
+              </Link>
+            </Dialog.Title>
+            <Dialog.Description className="auth-description">
+              Entre para gerenciar sua carteira, coleção e perfil de criador.
+            </Dialog.Description>
+            <Dialog.Close className="auth-close" aria-label="Fechar login">
+              <X size={18} />
+            </Dialog.Close>
+            <form className="auth-form panel stack" onSubmit={submit}>
+              <h2 className="sr-only">{register ? 'Crie sua conta' : 'Bom ter você de volta'}</h2>
+              {register && (
+                <Field
+                  label="Nome completo"
+                  name="name"
+                  autoComplete="name"
+                  required
+                  minLength={2}
+                />
+              )}
+              <Field label="E-mail" name="email" type="email" autoComplete="email" required />
+              <div className="password-control">
+                <Field
+                  label="Senha"
+                  name="password"
+                  type={visiblePassword ? 'text' : 'password'}
+                  autoComplete={register ? 'new-password' : 'current-password'}
+                  required
+                  minLength={8}
+                  aria-describedby="auth-hint"
+                />
+                <button
+                  type="button"
+                  aria-label={visiblePassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  aria-pressed={visiblePassword}
+                  onClick={() => setVisiblePassword(!visiblePassword)}
+                >
+                  {visiblePassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              {!register && (
+                <button
+                  type="button"
+                  className="forgot-password"
+                  onClick={() =>
+                    setAuxiliary(
+                      'Recuperação por e-mail não disponível. Use a conta demonstrativa indicada abaixo.',
+                    )
+                  }
+                >
+                  Esqueceu a senha?
+                </button>
+              )}
+              {register && (
+                <Field
+                  label="Confirmar senha"
+                  name="confirm"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  minLength={8}
+                />
+              )}
+              <p id="auth-hint">Use pelo menos 8 caracteres. Demo: ana@demo.com / Demo123!</p>
+              {error && (
+                <p role="alert" className="error">
+                  {error}
+                </p>
+              )}
+              {mutation.error && <ErrorBox error={mutation.error} />}
+              <Button type="submit" disabled={mutation.isPending}>
+                {mutation.isPending ? 'Aguarde…' : register ? 'Criar conta' : 'Entrar na conta'}
+              </Button>
+              <p>
+                {register ? 'Já tem uma conta?' : 'Ainda não tem uma conta?'}{' '}
+                <Link to={register ? '/login' : '/register'}>
+                  {register ? 'Entrar' : 'Cadastre-se'}
+                </Link>
+              </p>
+              <div className="social-auth">
+                <p>Ou continue com</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    setAuxiliary('Login Google não disponível na demonstração. Use e-mail e senha.')
+                  }
+                >
+                  G · Continuar com Google
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    setAuxiliary(
+                      'Login Facebook não disponível na demonstração. Use e-mail e senha.',
+                    )
+                  }
+                >
+                  f · Continuar com Facebook
+                </Button>
+              </div>
+              {auxiliary && <p role="status">{auxiliary}</p>}
+            </form>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+    </>
   );
 }
 function AccountLayout({ children }: { children: ReactNode }) {
