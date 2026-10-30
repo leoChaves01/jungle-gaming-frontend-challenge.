@@ -367,4 +367,5 @@ test('18 login em diálogo, visibilidade de senha e ação auxiliar honesta', as
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
   await expect(page).not.toHaveURL(/\/login/);
+  await expect(page.getByRole('link', { name: 'Entrar', exact: true })).toBeFocused();
 });

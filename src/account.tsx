@@ -52,6 +52,12 @@ export function Auth({ register = false }: { register?: boolean }) {
             className="auth-modal"
             onCloseAutoFocus={(e) => {
               e.preventDefault();
+              requestAnimationFrame(() => {
+                const target =
+                  document.querySelector<HTMLElement>('header a[href="/login"]') ||
+                  document.querySelector<HTMLElement>('#main');
+                target?.focus();
+              });
             }}
           >
             <Dialog.Title className="auth-tabs">
