@@ -2,6 +2,14 @@
 
 Relatório gerado a partir dos resultados executados, em 2026-10-30T10:35:09.252Z.
 
+## Atualização final — 30 de outubro
+
+- O filtro mobile agora mantém o painel aberto quando a URL contém filtros ativos. Isso corrige o reload de `Arte digital`/`Ethereum`, sem remover a verificação automatizada.
+- O caso foi executado três vezes localmente e três vezes na URL HTTPS publicada, sem falhas.
+- A suíte local completa foi executada novamente: **48 aprovados, 0 falhas**.
+- O GitHub Actions do commit `d0f719d` foi concluído com sucesso: [run 41045272554](https://github.com/leoChaves01/jungle-gaming-frontend-challenge./actions/runs/41045272554).
+- A Vercel respondeu HTTP 200 e serviu o bundle `index-BqaD5vsN.js`, igual ao build desse commit.
+
 ## Build e qualidade
 
 - `npm run typecheck`, `npm run lint` e `npm run build`: executados com sucesso.
